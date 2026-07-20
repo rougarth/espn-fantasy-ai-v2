@@ -1,7 +1,7 @@
 import { app, type WebContents } from 'electron';
 import { describeJson, safeDiagnosticEvent } from './diagnostic-sanitizer';
 
-const RELEVANT = /fantasy|league|membership|team|profile|user/i;
+const RELEVANT = /fantasy|league|membership|team|profile|user|login|auth|oauth|identity|register/i;
 
 type DebuggerEvent = {
   requestId?: string;
@@ -52,4 +52,3 @@ export function attachEspnDiscovery(webContents: WebContents, sessionState: () =
   void webContents.debugger.sendCommand('Network.enable');
   return () => { webContents.debugger.removeListener('message', onMessage); if (webContents.debugger.isAttached()) webContents.debugger.detach(); };
 }
-

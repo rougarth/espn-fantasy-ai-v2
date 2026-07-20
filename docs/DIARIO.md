@@ -93,3 +93,24 @@ Não validado: login manual completo com credenciais reais, MFA/CAPTCHA e detec�
 - `npm audit`: 0 vulnerabilidades conhecidas após Electron 40.10.6.
 - `npm run dist:win`: passou; instalador NSIS x64 gerado em `dist/ESPN-Fantasy-AI-Setup-0.1.0-x64.exe`.
 - Workflow da branch da Fase 2A: pendente até o push/PR.
+
+## Validação manual com conta ESPN real — 20/07/2026
+
+- Login real: concluído. A janela fechou automaticamente e a interface mostrou `Conectado com sucesso`; isso comprova que os cookies esperados `espn_s2` e `SWID` estavam simultaneamente presentes, sem leitura ou registro de seus valores.
+- MFA/CAPTCHA: não foi informado se foram apresentados; nenhuma interação da janela oficial nem conteúdo de formulário foi observado ou registrado pelo diagnóstico.
+- Persistência: confirmada. Após fechar e reiniciar `npm run dev:diagnostics`, a sessão foi reconhecida sem novo login.
+- Carregamento de ligas: não executou chamada externa porque nenhum endpoint está confirmado. A interface mostrou indisponibilidade, sem dados fictícios.
+- Logout: confirmado. A interface voltou ao estado desconectado e, após nova reinicialização, a sessão permaneceu ausente.
+- Endpoint de ligas: não identificado. Não há base para implementar listagem reproduzível ainda.
+
+### Tráfego sanitizado efetivamente observado
+
+- `2026-07-20T16:40:17.536Z` — evento `network-response`; host `log.go.com`; pathname `/log`; método `GET`; status `200`; content-type `application/octet-stream`; redirects `0`; sessão `absent`; sem JSON. Foram registrados somente nomes de query, nunca valores.
+- Nenhuma resposta relacionada a `leagues`, `memberships`, `teams` ou `fantasy profile` foi observada.
+
+### Problemas revelados pelo teste real e correções
+
+- A janela aguardava `ready-to-show`, que não ocorreu de forma confiável na página real. Corrigido para mostrar a janela imediatamente; o login passou a ser utilizável.
+- `npm run dev` usava bundles main/preload antigos até build manual. Corrigido para recompilá-los antes de iniciar.
+- O CSP de produção bloqueava estilos injetados pelo Vite apenas em desenvolvimento. O servidor de desenvolvimento agora adiciona `unsafe-inline` somente ao HTML servido localmente; o build empacotado mantém a CSP estrita.
+- O filtro diagnóstico não incluía rotas genéricas de login/identidade. Foi ampliado mantendo a mesma sanitização e sem registrar valores.

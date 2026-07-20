@@ -36,7 +36,7 @@ export async function openEspnLogin(parent: BrowserWindow): Promise<LoginResult>
     };
     loginWindow = new BrowserWindow({
       parent, modal: false, width: 1080, height: 760, minWidth: 720, minHeight: 560,
-      title: 'ESPN Login', show: false,
+      title: 'ESPN Login', show: true,
       webPreferences: { partition: ESPN_PARTITION, contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true }
     });
     loginWindow.webContents.setWindowOpenHandler(({ url }) => {

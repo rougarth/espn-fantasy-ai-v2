@@ -18,6 +18,7 @@ test('main window opens and language selector works', async () => {
 test('login click opens only one window and does not reload it on a second click', async () => {
   await page.getByRole('button', { name: 'Conectar com ESPN' }).click();
   await expect.poll(() => app.windows().length).toBe(2);
+  expect(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().every((window) => window.isVisible()))).toBe(true);
   const login = app.windows().find((window) => window !== page)!;
   const firstId = await login.evaluate(() => performance.timeOrigin);
   await page.getByRole('button', { name: 'Conectar com ESPN' }).click({ force: true });
