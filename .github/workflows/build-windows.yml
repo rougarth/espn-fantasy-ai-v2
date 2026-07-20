@@ -1,0 +1,44 @@
+name: Build Windows
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Typecheck
+        run: npm run typecheck 2>&1 | Tee-Object -FilePath typecheck.log
+      - name: Lint
+        run: npm run lint 2>&1 | Tee-Object -FilePath lint.log
+      - name: Unit tests
+        run: npm run test:unit 2>&1 | Tee-Object -FilePath unit-tests.log
+      - name: Electron checks
+        run: npm run test:electron 2>&1 | Tee-Object -FilePath electron-tests.log
+      - name: Build NSIS installer
+        run: npm run dist:win 2>&1 | Tee-Object -FilePath installer.log
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: espn-fantasy-ai-windows
+          path: dist/*.exe
+          if-no-files-found: error
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-logs
+          path: |
+            *.log
+            test-results/**
+            playwright-report/**
+          if-no-files-found: ignore
+
