@@ -23,6 +23,8 @@ jobs:
         run: npm run test:unit 2>&1 | Tee-Object -FilePath unit-tests.log
       - name: Electron checks
         run: npm run test:electron 2>&1 | Tee-Object -FilePath electron-tests.log
+      - name: Build application
+        run: npm run build 2>&1 | Tee-Object -FilePath build.log
       - name: Build NSIS installer
         run: npm run dist:win 2>&1 | Tee-Object -FilePath installer.log
       - name: Upload installer
