@@ -114,3 +114,25 @@ Não validado: login manual completo com credenciais reais, MFA/CAPTCHA e detec�
 - `npm run dev` usava bundles main/preload antigos até build manual. Corrigido para recompilá-los antes de iniciar.
 - O CSP de produção bloqueava estilos injetados pelo Vite apenas em desenvolvimento. O servidor de desenvolvimento agora adiciona `unsafe-inline` somente ao HTML servido localmente; o build empacotado mantém a CSP estrita.
 - O filtro diagnóstico não incluía rotas genéricas de login/identidade. Foi ampliado mantendo a mesma sanitização e sem registrar valores.
+
+## Modo de descoberta pós-login
+
+- Hipótese: a janela fechava antes que a navegação oficial de Fantasy gerasse chamadas de ligas.
+- Implementação: em desenvolvimento com `ESPN_DIAGNOSTICS=1`, a sessão real mantém a janela aberta, envia uma mensagem segura ao painel e navega uma única vez para `https://fantasy.espn.com/football/`. Produção continua fechando imediatamente.
+- Navegação posterior é totalmente manual; não há reload, polling de página ou clique automático.
+- `webRequest` observa `onBeforeRequest`, `onBeforeSendHeaders`, `onHeadersReceived`, `onCompleted` e `onErrorOccurred` sem alterar requests e correlaciona por request id.
+- Headers e bodies nunca entram no modelo exportado. Query values são descartados e segmentos de pathname semelhantes a IDs são substituídos por `:id`.
+- O DevTools Protocol somente enriquece registros JSON com tipo, chaves de primeiro nível e quantidade de itens; respostas completas não são persistidas.
+- O painel interno mostra contagens, hosts e requisições de alta relevância. Ele só aparece após o evento de descoberta em desenvolvimento.
+- A exportação JSON contém apenas records validados por schema fechado e análise local. Candidatos usam `confirmed: false`; nomes sugestivos não confirmam endpoint.
+- Endpoint de ligas continua não confirmado até a nova execução real descrita no checklist.
+
+### Validação automatizada do modo de descoberta
+
+- `npm run typecheck`: passou.
+- `npm run lint`: passou.
+- `npm run test:unit`: 6 arquivos, 26 testes aprovados.
+- `npm run test:electron`: 10 testes aprovados, incluindo diferença entre produção e diagnóstico, janela persistente após autenticação e encerramento explícito.
+- `npm audit`: 0 vulnerabilidades conhecidas.
+- `npm run dist:win`: instalador NSIS x64 gerado com sucesso.
+- Nova execução real de descoberta: ainda pendente; nenhum endpoint foi promovido ou configurado.

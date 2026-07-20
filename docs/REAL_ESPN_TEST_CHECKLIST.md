@@ -41,12 +41,21 @@ Use uma conta ESPN válida no Windows. Não copie cookies, tokens, respostas com
 ## Descoberta reproduzível (desenvolvimento)
 
 1. Executar `npm run dev:diagnostics`.
-2. Fazer login real na janela oficial.
-3. Navegar na página oficial da ESPN Fantasy até a área que lista ligas.
-4. Guardar apenas linhas `[espn-diagnostic]` sanitizadas.
-5. Identificar candidatos relacionados a `memberships`, `leagues`, `history`, `teams` ou `profile` pelo host, pathname, método, status, content-type e forma superficial.
-6. Repetir em uma nova execução com a mesma sessão persistente.
-7. Antes de configurar qualquer endpoint, confirmar que a chamada é oficial, reproduzível, retorna JSON e não depende de valores copiados manualmente.
+2. Clicar em “Conectar com ESPN”.
+3. Fazer login real na janela oficial.
+4. Confirmar a mensagem “Login confirmado. Agora abra sua liga da ESPN nesta janela.”
+5. Confirmar que a janela navegou uma única vez para a página oficial de Fantasy Football.
+6. Abrir “My Teams” ou equivalente manualmente.
+7. Abrir uma liga real.
+8. Abrir a página do próprio time.
+9. Abrir standings.
+10. Abrir matchup.
+11. Aguardar alguns segundos sem recarregar automaticamente.
+12. Clicar em “Encerrar descoberta”.
+13. Clicar em “Exportar diagnóstico sanitizado” e escolher um arquivo local.
+14. Verificar manualmente que o arquivo não contém cookies, headers, tokens, e-mails, nomes pessoais, request bodies ou respostas completas.
+15. Revisar a seção `analysis` usando apenas linguagem como “candidato observado” e “ainda não confirmado”.
+16. Repetir candidatos promissores em outra execução usando somente a sessão persistente.
+17. Só confirmar um endpoint se o JSON representar ligas reais, tiver estrutura compatível na repetição e for validado manualmente.
 
 Nunca anexar corpo da resposta, valores de query, cookies, tokens, credenciais ou informações pessoais.
-

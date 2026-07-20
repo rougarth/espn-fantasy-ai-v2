@@ -21,6 +21,8 @@ O login abre `https://www.espn.com/login` em uma `BrowserWindow` separada com a 
 
 O diagnóstico registra somente host, pathname, método, chaves de query sem valores sensíveis, status, content-type, redirects, formato superficial do JSON, timestamp e presença/ausência geral da sessão. Nunca registra corpos, valores de cookies, tokens, credenciais ou dados pessoais. Consulte [docs/REAL_ESPN_TEST_CHECKLIST.md](docs/REAL_ESPN_TEST_CHECKLIST.md).
 
+No modo diagnóstico, a janela permanece aberta depois do login e navega uma única vez para a página oficial de Fantasy Football. Navegue manualmente, acompanhe apenas os agregados do painel interno, clique em “Encerrar descoberta” e depois em “Exportar diagnóstico sanitizado”. O arquivo contém registros permitidos e uma análise local de candidatos observados; nenhum candidato é marcado automaticamente como endpoint confirmado. Esse modo não existe no aplicativo empacotado.
+
 > A marca ESPN pertence aos seus respectivos proprietários. Este projeto não é afiliado nem endossado pela ESPN.
 
 ## English
@@ -43,6 +45,8 @@ Login opens `https://www.espn.com/login` in a separate `BrowserWindow` using the
 “Sign out of ESPN” and “Clear session” remove cookies and persistent storage from that partition. Login can be cancelled and times out after five minutes without reloading the page.
 
 Diagnostics record only host, pathname, method, query keys without sensitive values, status, content type, redirects, shallow JSON shape, timestamp, and general session presence. Bodies, cookie values, tokens, credentials, and personal data are never logged. See [docs/REAL_ESPN_TEST_CHECKLIST.md](docs/REAL_ESPN_TEST_CHECKLIST.md).
+
+In diagnostics mode, the window remains open after sign-in and navigates once to the official Fantasy Football page. Navigate manually, review only aggregates in the internal panel, select “End discovery,” and then “Export sanitized diagnostics.” The file contains permitted records plus local analysis of observed candidates; candidates are never automatically marked as confirmed endpoints. This mode is absent from packaged builds.
 
 > ESPN trademarks belong to their respective owners. This project is not affiliated with or endorsed by ESPN.
 
