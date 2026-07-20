@@ -157,3 +157,12 @@ Não validado: login manual completo com credenciais reais, MFA/CAPTCHA e detec�
 - Candidato observado, ainda não confirmado: `GET fan.api.espn.com/apis/v2/fans/:id`, `200`, JSON, frequência 3, com chaves superficiais incluindo `fantasyData` e `profile`. A exportação não demonstra que o objeto contém uma coleção de ligas reais nem que a chamada foi repetida de forma controlada.
 - Nenhum endpoint de ligas foi confirmado; `listUserLeagues` permanece indisponível.
 - Falha de sanitização encontrada: UUIDs entre chaves e codificados no pathname não eram substituídos. O sanitizador agora normaliza UUIDs simples, entre chaves ou codificados, além de segmentos numéricos longos, sempre para `:id`.
+
+### Comparação das duas exportações reais
+
+- Primeira exportação: 58 eventos, 13 respostas JSON, 45 eventos com sessão presente e 6 registros classificados como alta relevância. Hosts com JSON: `fan.api.espn.com` (3), `registerdisney.go.com` (3), `site.api.espn.com` (2), `dcf.espn.com` (1), `go.web.plus.espn.com` (1), `broadband.espn.com` (1), `pinpoint.espn.com` (1) e `secure.espn.com` (1).
+- Segunda exportação: 18 eventos, 3 respostas JSON, 3 eventos com sessão presente e 1 registro de alta relevância. As três respostas JSON vieram de `registerdisney.go.com`; a requisição para `www.espn.com/fantasy/` foi exportada antes de receber status ou content-type.
+- Requisições de alta relevância efetivamente observadas: `GET www.espn.com/fantasy/` (`200`, HTML, frequência 2 no primeiro arquivo; incompleta no segundo), `GET fantasy.espn.com/service-worker.js` (`302`, texto, frequência 2) e a rota antiga `GET fantasy.espn.com/football/` (`404`, HTML, frequência 1). Nenhuma retornou JSON de ligas.
+- Padrões não observados em JSON: `leagues`, `memberships`, `teams`, `roster`, `standings` e `matchup`. O único candidato relacionado a fantasy/profile continua sendo `GET fan.api.espn.com/apis/v2/fans/:id`, mas apenas sua forma superficial foi observada.
+- Confirmação: zero endpoints. Não houve resposta contendo uma coleção demonstrável de ligas reais nem repetição controlada da mesma chamada.
+- Menor próximo teste: entrar no hub corrigido, abrir manualmente uma liga real, aguardar o carregamento completo por pelo menos 10 segundos e somente então exportar um novo diagnóstico sanitizado.
