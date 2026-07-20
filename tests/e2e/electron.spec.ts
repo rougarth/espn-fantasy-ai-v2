@@ -71,6 +71,21 @@ test('development diagnostics keeps login window open after session detection', 
   await expect.poll(() => app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(1);
 });
 
+test('development diagnostics recognizes a session that already exists when login opens', async () => {
+  await app.close();
+  app = await electron.launch({ args: [path.resolve('.'), `--user-data-dir=${userDataDir}`], env: { ...process.env, NODE_ENV: 'development', ESPN_DIAGNOSTICS: '1', ESPN_LOGIN_TIMEOUT_MS: '5000' } });
+  page = await app.firstWindow();
+  await app.evaluate(async ({ session }) => {
+    const target = session.fromPartition('persist:espn');
+    await target.cookies.set({ url: 'https://www.espn.com', name: 'espn_s2', value: 'e2e-test-only' });
+    await target.cookies.set({ url: 'https://www.espn.com', name: 'SWID', value: 'e2e-test-only' });
+  });
+  await page.evaluate(() => { void (window as unknown as { espnAuth: { login: () => Promise<string> } }).espnAuth.login(); });
+  await expect(page.getByText('Login confirmado. Agora abra sua liga da ESPN nesta janela.')).toBeVisible();
+  expect(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(2);
+  await page.getByRole('button', { name: 'Encerrar descoberta' }).click();
+});
+
 test('connected interface shows loading, empty results, and no raw JSON', async () => {
   await app.evaluate(async ({ ipcMain, session }) => {
     const target = session.fromPartition('persist:espn');

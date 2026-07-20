@@ -61,7 +61,9 @@ export async function openEspnLogin(parent: BrowserWindow): Promise<LoginResult>
     startDiscoveryRuntime(loginWindow.webContents, espnSession, () => hasRealEspnSession(espnSession));
     endDiscoveryCallback = () => finish('authenticated');
     const timer = setTimeout(() => finish('timeout'), LOGIN_TIMEOUT_MS);
-    void loginWindow.loadURL(LOGIN_URL).catch(() => { if (!discoveryActive && !authenticated) finish('cancelled'); });
+    void loginWindow.loadURL(LOGIN_URL)
+      .then(() => onCookieChanged())
+      .catch(() => { if (!discoveryActive && !authenticated) finish('cancelled'); });
   });
   return pendingLogin;
 }

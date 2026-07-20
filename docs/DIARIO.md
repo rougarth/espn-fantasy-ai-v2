@@ -136,3 +136,12 @@ Não validado: login manual completo com credenciais reais, MFA/CAPTCHA e detec�
 - `npm audit`: 0 vulnerabilidades conhecidas.
 - `npm run dist:win`: instalador NSIS x64 gerado com sucesso.
 - Nova execução real de descoberta: ainda pendente; nenhum endpoint foi promovido ou configurado.
+
+## Correção revelada pela reabertura do login real — 20/07/2026
+
+- Observado: ao escolher `Fazer login novamente` com uma sessão persistente já válida, a janela oficial abria, mas o aplicativo permanecia em `Aguardando login na ESPN…`.
+- Causa: a detecção aguardava somente o evento `cookies.changed`. Cookies reais que já existiam e não mudavam não geravam um novo evento.
+- Correção: após a carga inicial da página oficial, o aplicativo executa uma única verificação da sessão persistente pelo mesmo critério estrito (`espn_s2` e `SWID` presentes). Valores continuam sem acesso pelo renderer e sem registro em logs.
+- Teste adicionado: o modo diagnóstico reconhece uma sessão que já existia antes da abertura do login e mantém a janela de descoberta aberta.
+- Endpoint de ligas: continua não confirmado; esta correção não adiciona nem presume endpoint.
+- Validação após a correção: typecheck e ESLint passaram; Vitest passou com 26 testes; Playwright/Electron passou com 11 testes; build NSIS x64 passou; `npm audit` encontrou 0 vulnerabilidades.
