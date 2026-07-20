@@ -44,6 +44,7 @@ export async function openEspnLogin(parent: BrowserWindow): Promise<LoginResult>
         void loginWindow?.loadURL(FANTASY_FOOTBALL_URL);
       } else finish('authenticated');
     };
+    const onAuthenticationNavigation = () => { void onCookieChanged(); };
     loginWindow = new BrowserWindow({
       parent, modal: false, width: 1080, height: 760, minWidth: 720, minHeight: 560,
       title: 'ESPN Login', show: true,
@@ -58,6 +59,8 @@ export async function openEspnLogin(parent: BrowserWindow): Promise<LoginResult>
     loginWindow.on('close', (event) => { if (discoveryActive && !allowDiscoveryClose) event.preventDefault(); });
     loginWindow.once('closed', () => { loginWindow = null; if (authenticated && discoveryActive) finish('authenticated'); else if (!authenticated) finish('cancelled'); });
     espnSession.cookies.on('changed', onCookieChanged);
+    loginWindow.webContents.on('did-navigate', onAuthenticationNavigation);
+    loginWindow.webContents.on('did-redirect-navigation', onAuthenticationNavigation);
     startDiscoveryRuntime(loginWindow.webContents, espnSession, () => hasRealEspnSession(espnSession));
     endDiscoveryCallback = () => finish('authenticated');
     const timer = setTimeout(() => finish('timeout'), LOGIN_TIMEOUT_MS);

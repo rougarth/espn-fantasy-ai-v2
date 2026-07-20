@@ -145,3 +145,4 @@ Não validado: login manual completo com credenciais reais, MFA/CAPTCHA e detec�
 - Teste adicionado: o modo diagnóstico reconhece uma sessão que já existia antes da abertura do login e mantém a janela de descoberta aberta.
 - Endpoint de ligas: continua não confirmado; esta correção não adiciona nem presume endpoint.
 - Validação após a correção: typecheck e ESLint passaram; Vitest passou com 26 testes; Playwright/Electron passou com 11 testes; build NSIS x64 passou; `npm audit` encontrou 0 vulnerabilidades.
+- Segunda variação observada no site real: o redirecionamento chegou à área Fantasy sem emitir uma alteração de cookie posterior à verificação inicial. A detecção passou também a revalidar a sessão nos eventos reais `did-navigate` e `did-redirect-navigation`; não foi adicionado polling, reload ou navegação por intervalo.
