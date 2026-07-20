@@ -5,7 +5,6 @@ import { DiscoveryRecordSchema, type DiscoveryRecord, type DiscoverySnapshot } f
 
 type Pending = Omit<DiscoveryRecord, 'event' | 'returnedJson' | 'session' | 'relevance'> & { id: number; returnedJson?: boolean; session?: 'present' | 'absent' };
 const OFFICIAL_URLS = ['*://*.espn.com/*', '*://espn.com/*', '*://*.go.com/*', '*://go.com/*', '*://*.disney.com/*', '*://*.disneyid.com/*'];
-const safePath = (pathname: string) => pathname.split('/').map((part) => /^\d{4,}$|^[0-9a-f]{8}-[0-9a-f-]{20,}$/i.test(part) ? ':id' : part).join('/');
 const safeOrigin = (origin?: string) => { if (!origin) return undefined; try { return new URL(origin).hostname; } catch { return undefined; } };
 
 export class DiscoveryCollector {
@@ -18,7 +17,7 @@ export class DiscoveryCollector {
     const filter = { urls: OFFICIAL_URLS };
     this.espnSession.webRequest.onBeforeRequest(filter, (details, callback) => {
       const url = sanitizeUrl(details.url);
-      this.pending.set(details.id, { id: details.id, timestamp: new Date().toISOString(), host: url.host, pathname: safePath(url.pathname), method: details.method, queryKeys: url.queryKeys, redirects: 0, resourceType: details.resourceType, initiatorOrigin: safeOrigin(details.referrer) });
+      this.pending.set(details.id, { id: details.id, timestamp: new Date().toISOString(), host: url.host, pathname: url.pathname, method: details.method, queryKeys: url.queryKeys, redirects: 0, resourceType: details.resourceType, initiatorOrigin: safeOrigin(details.referrer) });
       callback({});
     });
     this.espnSession.webRequest.onBeforeSendHeaders(filter, (_details, callback) => callback({}));
@@ -31,9 +30,9 @@ export class DiscoveryCollector {
     this.espnSession.webRequest.onErrorOccurred(filter, (details) => { void this.finalize(details.id, 'error'); });
   }
 
-  noteRedirect(url: string, method = 'GET'): void { const sanitized = sanitizeUrl(url); const key = `${method} ${sanitized.host}${safePath(sanitized.pathname)}`; this.redirects.set(key, (this.redirects.get(key) ?? 0) + 1); }
+  noteRedirect(url: string, method = 'GET'): void { const sanitized = sanitizeUrl(url); const key = `${method} ${sanitized.host}${sanitized.pathname}`; this.redirects.set(key, (this.redirects.get(key) ?? 0) + 1); }
   enrichJson(url: string, shape: { kind: 'array' | 'object' | 'string' | 'primitive'; topLevelKeys?: string[]; itemCount?: number }): void {
-    const sanitized = sanitizeUrl(url); const pathname = safePath(sanitized.pathname);
+    const sanitized = sanitizeUrl(url); const pathname = sanitized.pathname;
     const record = [...this.records].reverse().find((item) => item.host === sanitized.host && item.pathname === pathname);
     if (!record) return;
     record.returnedJson = true; record.jsonKind = shape.kind === 'primitive' ? 'primitive' : shape.kind; record.topLevelKeys = shape.topLevelKeys; record.itemCount = shape.itemCount;

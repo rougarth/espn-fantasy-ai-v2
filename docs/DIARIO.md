@@ -148,3 +148,12 @@ Não validado: login manual completo com credenciais reais, MFA/CAPTCHA e detec�
 - Segunda variação observada no site real: o redirecionamento chegou à área Fantasy sem emitir uma alteração de cookie posterior à verificação inicial. A detecção passou também a revalidar a sessão nos eventos reais `did-navigate` e `did-redirect-navigation`; não foi adicionado polling, reload ou navegação por intervalo.
 - Terceiro problema observado: o timeout destinado ao login continuava ativo durante a descoberta autenticada e fechava a janela ao expirar. O timer agora é cancelado assim que a sessão real é detectada; um E2E verifica que a janela continua aberta depois do limite original.
 - Destino real informado e observado pelo usuário: o hub atual é `https://fantasy.espn.com/fantasy/`. A rota anteriormente usada, `/football/`, retornou `404` em uma verificação sem sessão e foi substituída. Isso altera somente a navegação manual do diagnóstico, não confirma endpoint de ligas.
+
+### Diagnóstico real exportado após o login
+
+- Observado: 58 requisições, 13 respostas JSON e sessão presente em 45 eventos.
+- Observado: o login oficial respondeu `200` com JSON; o fluxo chegou a hosts oficiais ESPN/Disney e a sessão foi detectada sem exposição dos cookies.
+- Observado: `GET fantasy.espn.com/football/` retornou `404` com HTML. Esse resultado confirmou a correção do destino para `/fantasy/`.
+- Candidato observado, ainda não confirmado: `GET fan.api.espn.com/apis/v2/fans/:id`, `200`, JSON, frequência 3, com chaves superficiais incluindo `fantasyData` e `profile`. A exportação não demonstra que o objeto contém uma coleção de ligas reais nem que a chamada foi repetida de forma controlada.
+- Nenhum endpoint de ligas foi confirmado; `listUserLeagues` permanece indisponível.
+- Falha de sanitização encontrada: UUIDs entre chaves e codificados no pathname não eram substituídos. O sanitizador agora normaliza UUIDs simples, entre chaves ou codificados, além de segmentos numéricos longos, sempre para `:id`.

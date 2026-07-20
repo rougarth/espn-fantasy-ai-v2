@@ -10,6 +10,10 @@ describe('safe ESPN diagnostics', () => {
     expect(JSON.stringify(sanitized)).not.toContain('2026');
     expect(JSON.stringify(sanitized)).not.toContain('mTeam');
   });
+  it('redacts encoded and plain identifiers from pathnames', () => {
+    expect(sanitizeUrl('https://fan.api.espn.com/apis/v2/fans/%7B12345678-1234-1234-1234-123456789abc%7D').pathname).toBe('/apis/v2/fans/:id');
+    expect(sanitizeUrl('https://example.espn.com/users/123456').pathname).toBe('/users/:id');
+  });
   it('describes JSON only at the surface', () => {
     expect(describeJson([{ private: 'hidden' }])).toEqual({ kind: 'array', itemCount: 1 });
     expect(describeJson({ leagues: [{ private: 'hidden' }], profile: {} })).toEqual({ kind: 'object', topLevelKeys: ['leagues', 'profile'] });
@@ -26,4 +30,3 @@ describe('safe ESPN diagnostics', () => {
     expect(isAllowedLoginUrl('http://www.espn.com/login')).toBe(false);
   });
 });
-

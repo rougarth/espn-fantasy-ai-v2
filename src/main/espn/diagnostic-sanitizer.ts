@@ -4,11 +4,21 @@ const SENSITIVE_QUERY_KEYS = /token|auth|code|cookie|credential|password|secret|
 
 export type SanitizedUrl = { host: string; pathname: string; queryKeys: string[] };
 
+export function sanitizePathname(pathname: string): string {
+  return pathname.split('/').map((segment) => {
+    let decoded = segment;
+    try { decoded = decodeURIComponent(segment); } catch { /* Preserve malformed segments without exposing query data. */ }
+    if (/^\{?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}?$/i.test(decoded)) return ':id';
+    if (/^\d{4,}$/.test(decoded)) return ':id';
+    return segment;
+  }).join('/');
+}
+
 export function sanitizeUrl(urlString: string): SanitizedUrl {
   const url = new URL(urlString);
   return {
     host: url.hostname,
-    pathname: url.pathname,
+    pathname: sanitizePathname(url.pathname),
     queryKeys: [...new Set([...url.searchParams.keys()])].filter((key) => !SENSITIVE_QUERY_KEYS.test(key)).sort()
   };
 }
