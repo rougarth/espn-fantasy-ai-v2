@@ -23,8 +23,7 @@ export type LeagueListResult =
   | { ok: false; error: EspnErrorCode };
 
 export type JsonShape = {
-  kind: 'array' | 'object' | 'primitive';
+  kind: 'array' | 'object' | 'string' | 'primitive';
   topLevelKeys?: string[];
   itemCount?: number;
 };
-

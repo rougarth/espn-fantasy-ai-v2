@@ -38,8 +38,37 @@ test('login times out without page reload', async () => {
 });
 test('renderer API exposes no cookie values or Node primitives', async () => {
   const exposed = await page.evaluate(() => { const target = window as unknown as { espnAuth: object; process?: unknown; require?: unknown }; return { keys: Object.keys(target.espnAuth), process: typeof target.process, require: typeof target.require }; });
-  expect(exposed.keys.sort()).toEqual(['cancel', 'clear', 'listLeagues', 'login', 'logout', 'status']);
+  expect(exposed.keys.sort()).toEqual(['cancel', 'clear', 'discoveryEnabled', 'discoverySnapshot', 'endDiscovery', 'exportDiscovery', 'listLeagues', 'login', 'logout', 'onDiscoveryStarted', 'status']);
   expect(exposed.process).toBe('undefined'); expect(exposed.require).toBe('undefined');
+});
+
+test('production-like mode closes login after real-session cookies appear and hides diagnostics', async () => {
+  await page.getByRole('button', { name: 'Conectar com ESPN' }).click();
+  await expect.poll(() => app.windows().length).toBe(2);
+  await app.evaluate(async ({ session }) => {
+    const target = session.fromPartition('persist:espn');
+    await target.cookies.set({ url: 'https://www.espn.com', name: 'espn_s2', value: 'e2e-test-only' });
+    await target.cookies.set({ url: 'https://www.espn.com', name: 'SWID', value: 'e2e-test-only' });
+  });
+  await expect.poll(() => app.windows().length).toBe(1);
+  await expect(page.getByText('Conectado com sucesso')).toBeVisible();
+  await expect(page.getByText('Descoberta ESPN')).toHaveCount(0);
+});
+
+test('development diagnostics keeps login window open after session detection', async () => {
+  await app.close();
+  app = await electron.launch({ args: [path.resolve('.'), `--user-data-dir=${userDataDir}`], env: { ...process.env, NODE_ENV: 'development', ESPN_DIAGNOSTICS: '1', ESPN_LOGIN_TIMEOUT_MS: '5000' } });
+  page = await app.firstWindow(); await page.getByRole('button', { name: 'Conectar com ESPN' }).click();
+  await expect.poll(() => app.windows().length).toBe(2);
+  await app.evaluate(async ({ session }) => {
+    const target = session.fromPartition('persist:espn');
+    await target.cookies.set({ url: 'https://www.espn.com', name: 'espn_s2', value: 'e2e-test-only' });
+    await target.cookies.set({ url: 'https://www.espn.com', name: 'SWID', value: 'e2e-test-only' });
+  });
+  await expect(page.getByText('Login confirmado. Agora abra sua liga da ESPN nesta janela.')).toBeVisible();
+  expect(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(2);
+  await page.getByRole('button', { name: 'Encerrar descoberta' }).click();
+  await expect.poll(() => app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(1);
 });
 
 test('connected interface shows loading, empty results, and no raw JSON', async () => {

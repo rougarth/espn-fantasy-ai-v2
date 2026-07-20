@@ -16,6 +16,7 @@ export function sanitizeUrl(urlString: string): SanitizedUrl {
 export function describeJson(value: unknown): JsonShape {
   if (Array.isArray(value)) return { kind: 'array', itemCount: value.length };
   if (value !== null && typeof value === 'object') return { kind: 'object', topLevelKeys: Object.keys(value).sort() };
+  if (typeof value === 'string') return { kind: 'string' };
   return { kind: 'primitive' };
 }
 
@@ -37,4 +38,3 @@ export function safeDiagnosticEvent(input: {
     jsonShape: input.jsonShape
   };
 }
-

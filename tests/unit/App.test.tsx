@@ -2,11 +2,12 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../src/renderer/App';
 
-const api = { status: vi.fn(), login: vi.fn(), cancel: vi.fn(), logout: vi.fn(), clear: vi.fn(), listLeagues: vi.fn() };
+const api = { status: vi.fn(), login: vi.fn(), cancel: vi.fn(), logout: vi.fn(), clear: vi.fn(), listLeagues: vi.fn(), discoveryEnabled: vi.fn(), discoverySnapshot: vi.fn(), exportDiscovery: vi.fn(), endDiscovery: vi.fn(), onDiscoveryStarted: vi.fn() };
 beforeEach(() => {
   vi.clearAllMocks(); api.status.mockResolvedValue(false); api.login.mockResolvedValue('cancelled'); api.logout.mockResolvedValue(true); api.clear.mockResolvedValue(true);
   Object.defineProperty(window, 'espnAuth', { configurable: true, value: api });
   api.listLeagues.mockResolvedValue({ ok: true, leagues: [] });
+  api.discoveryEnabled.mockResolvedValue(false); api.discoverySnapshot.mockResolvedValue({ totalRequests: 0, jsonResponses: 0, hosts: [], highRelevance: [] }); api.exportDiscovery.mockResolvedValue(true); api.endDiscovery.mockResolvedValue(true); api.onDiscoveryStarted.mockReturnValue(() => undefined);
 });
 afterEach(cleanup);
 
@@ -52,5 +53,10 @@ describe('App', () => {
     expect(document.body.textContent).not.toContain('{"');
     fireEvent.change(screen.getByLabelText('Idioma'), { target: { value: 'en' } });
     expect(screen.getByText('No internet connection. Check your connection and try again.')).toBeVisible();
+  });
+  it('does not show diagnostics until the development event occurs', async () => {
+    let start!: () => void; api.onDiscoveryStarted.mockImplementation((callback) => { start = callback; return () => undefined; });
+    render(<App />); expect(screen.queryByRole('region', { name: 'Diagnóstico ESPN' })).not.toBeInTheDocument();
+    start(); expect(await screen.findByText('Login confirmado. Agora abra sua liga da ESPN nesta janela.')).toBeVisible();
   });
 });
