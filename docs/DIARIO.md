@@ -183,3 +183,9 @@ Não validado: login manual completo com credenciais reais, MFA/CAPTCHA e detec�
 - A única requisição de alta relevância foi `GET www.espn.com/fantasy/`, exportada antes de receber status ou content-type.
 - Nenhum request de liga, time ou página interna foi capturado. A evidência indica que a navegação ocorreu fora da `BrowserWindow` monitorada ou que o arquivo foi exportado antes da conclusão do carregamento.
 - Endpoint confirmado: nenhum. `listUserLeagues` continua desabilitado e sem fallback fictício.
+
+### Janela monitorada inequívoca
+
+- Para eliminar a ambiguidade entre Chrome, hub e `BrowserWindow`, o modo diagnóstico agora fixa o título `ESPN Discovery - Monitored Window` na janela observada.
+- O painel de desenvolvimento ganhou `Abrir Fantasy Football na janela monitorada`, que traz essa janela para frente e navega, somente por ação do usuário, para a página oficial `https://fantasy.espn.com/football/welcome`.
+- Não há reload, polling de navegação, clique automático ou endpoint presumido.

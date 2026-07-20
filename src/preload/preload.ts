@@ -16,6 +16,7 @@ export interface EspnAuthApi {
   discoveryEnabled(): Promise<boolean>;
   discoverySnapshot(): Promise<DiscoverySnapshot>;
   exportDiscovery(): Promise<boolean>;
+  openFantasyFootball(): Promise<boolean>;
   endDiscovery(): Promise<boolean>;
   onDiscoveryStarted(callback: () => void): () => void;
 }
@@ -25,6 +26,7 @@ contextBridge.exposeInMainWorld('espnAuth', {
   cancel: () => invoke<void>('auth:cancel'), logout: () => invoke<boolean>('auth:logout'), clear: () => invoke<boolean>('auth:clear'),
   listLeagues: () => invoke<LeagueListResult>('leagues:list'), discoveryEnabled: () => invoke<boolean>('discovery:enabled'),
   discoverySnapshot: () => invoke<DiscoverySnapshot>('discovery:snapshot'), exportDiscovery: () => invoke<boolean>('discovery:export'),
+  openFantasyFootball: () => invoke<boolean>('discovery:open-football'),
   endDiscovery: () => invoke<boolean>('discovery:end'),
   onDiscoveryStarted: (callback: () => void) => { const listener = () => callback(); ipcRenderer.on('discovery:started', listener); return () => ipcRenderer.removeListener('discovery:started', listener); }
 } satisfies EspnAuthApi);

@@ -38,7 +38,7 @@ test('login times out without page reload', async () => {
 });
 test('renderer API exposes no cookie values or Node primitives', async () => {
   const exposed = await page.evaluate(() => { const target = window as unknown as { espnAuth: object; process?: unknown; require?: unknown }; return { keys: Object.keys(target.espnAuth), process: typeof target.process, require: typeof target.require }; });
-  expect(exposed.keys.sort()).toEqual(['cancel', 'clear', 'discoveryEnabled', 'discoverySnapshot', 'endDiscovery', 'exportDiscovery', 'listLeagues', 'login', 'logout', 'onDiscoveryStarted', 'status']);
+  expect(exposed.keys.sort()).toEqual(['cancel', 'clear', 'discoveryEnabled', 'discoverySnapshot', 'endDiscovery', 'exportDiscovery', 'listLeagues', 'login', 'logout', 'onDiscoveryStarted', 'openFantasyFootball', 'status']);
   expect(exposed.process).toBe('undefined'); expect(exposed.require).toBe('undefined');
 });
 
@@ -66,6 +66,7 @@ test('development diagnostics keeps login window open after session detection', 
     await target.cookies.set({ url: 'https://www.espn.com', name: 'SWID', value: 'e2e-test-only' });
   });
   await expect(page.getByText('Login confirmado. Agora abra sua liga da ESPN nesta janela.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Abrir Fantasy Football na janela monitorada' })).toBeVisible();
   expect(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(2);
   await page.getByRole('button', { name: 'Encerrar descoberta' }).click();
   await expect.poll(() => app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(1);

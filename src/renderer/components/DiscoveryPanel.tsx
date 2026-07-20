@@ -16,7 +16,6 @@ export function DiscoveryPanel({ language, ended, onEnd }: { language: Language;
     <div className="diagnostic-counts"><span>{pt ? 'Requisições' : 'Requests'}: {snapshot.totalRequests}</span><span>JSON: {snapshot.jsonResponses}</span><span>{pt ? 'Hosts' : 'Hosts'}: {snapshot.hosts.length}</span></div>
     {snapshot.hosts.length > 0 && <p className="hosts">{snapshot.hosts.join(', ')}</p>}
     <div className="diagnostic-list">{snapshot.highRelevance.slice(-20).map((record, index) => <article key={`${record.timestamp}-${index}`}><strong>{record.method} {record.pathname}</strong><span>{record.status ?? '—'} · {record.contentType ?? '—'}</span>{record.topLevelKeys?.length ? <small>{record.topLevelKeys.join(', ')}</small> : null}</article>)}</div>
-    <div className="actions"><button disabled={ended} onClick={() => void onEnd()}>{pt ? 'Encerrar descoberta' : 'End discovery'}</button><button className="secondary" onClick={() => void window.espnAuth.exportDiscovery()}>{pt ? 'Exportar diagnóstico sanitizado' : 'Export sanitized diagnostics'}</button></div>
+    <div className="actions"><button disabled={ended} onClick={() => void window.espnAuth.openFantasyFootball()}>{pt ? 'Abrir Fantasy Football na janela monitorada' : 'Open Fantasy Football in monitored window'}</button><button disabled={ended} onClick={() => void onEnd()}>{pt ? 'Encerrar descoberta' : 'End discovery'}</button><button className="secondary" onClick={() => void window.espnAuth.exportDiscovery()}>{pt ? 'Exportar diagnóstico sanitizado' : 'Export sanitized diagnostics'}</button></div>
   </section>;
 }
-

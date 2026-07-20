@@ -8,6 +8,7 @@ export const ESPN_PARTITION = 'persist:espn';
 export const LOGIN_TIMEOUT_MS = process.env.ESPN_LOGIN_TIMEOUT_MS ? Number(process.env.ESPN_LOGIN_TIMEOUT_MS) : 5 * 60_000;
 const LOGIN_URL = 'https://www.espn.com/login';
 const FANTASY_HUB_URL = 'https://fantasy.espn.com/fantasy/';
+const FANTASY_FOOTBALL_URL = 'https://fantasy.espn.com/football/welcome';
 let loginWindow: BrowserWindow | null = null;
 let pendingLogin: Promise<LoginResult> | null = null;
 let endDiscoveryCallback: (() => void) | null = null;
@@ -55,6 +56,10 @@ export async function openEspnLogin(parent: BrowserWindow): Promise<LoginResult>
       if (isAllowedLoginUrl(url)) return { action: 'allow', overrideBrowserWindowOptions: { parent: loginWindow ?? undefined, webPreferences: { partition: ESPN_PARTITION, contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true } } };
       if (url.startsWith('https://')) void shell.openExternal(url); return { action: 'deny' };
     });
+    if (diagnosticsEnabled()) {
+      loginWindow.setTitle('ESPN Discovery - Monitored Window');
+      loginWindow.webContents.on('page-title-updated', (event) => event.preventDefault());
+    }
     loginWindow.webContents.on('will-navigate', (event: Event, url: string) => { if (!isAllowedLoginUrl(url)) event.preventDefault(); });
     loginWindow.once('ready-to-show', () => loginWindow?.show());
     loginWindow.on('close', (event) => { if (discoveryActive && !allowDiscoveryClose) event.preventDefault(); });
@@ -79,5 +84,12 @@ export function cancelEspnLogin(): void {
 export function endEspnDiscovery(): boolean {
   if (!diagnosticsEnabled() || !endDiscoveryCallback) return false;
   endDiscoveryCallback(); return true;
+}
+
+export function openFantasyFootballInDiscovery(): boolean {
+  if (!diagnosticsEnabled() || !loginWindow || loginWindow.isDestroyed()) return false;
+  loginWindow.show(); loginWindow.focus();
+  void loginWindow.loadURL(FANTASY_FOOTBALL_URL);
+  return true;
 }
 
