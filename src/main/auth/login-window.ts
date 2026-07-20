@@ -7,7 +7,7 @@ import { isAllowedLoginUrl } from '../espn/login-domains';
 export const ESPN_PARTITION = 'persist:espn';
 export const LOGIN_TIMEOUT_MS = process.env.ESPN_LOGIN_TIMEOUT_MS ? Number(process.env.ESPN_LOGIN_TIMEOUT_MS) : 5 * 60_000;
 const LOGIN_URL = 'https://www.espn.com/login';
-const FANTASY_FOOTBALL_URL = 'https://fantasy.espn.com/football/';
+const FANTASY_HUB_URL = 'https://fantasy.espn.com/fantasy/';
 let loginWindow: BrowserWindow | null = null;
 let pendingLogin: Promise<LoginResult> | null = null;
 let endDiscoveryCallback: (() => void) | null = null;
@@ -42,7 +42,7 @@ export async function openEspnLogin(parent: BrowserWindow): Promise<LoginResult>
       if (diagnosticsEnabled()) {
         if (discoveryActive) return;
         discoveryActive = true; parent.webContents.send('discovery:started');
-        void loginWindow?.loadURL(FANTASY_FOOTBALL_URL);
+        void loginWindow?.loadURL(FANTASY_HUB_URL);
       } else finish('authenticated');
     };
     const onAuthenticationNavigation = () => { void onCookieChanged(); };

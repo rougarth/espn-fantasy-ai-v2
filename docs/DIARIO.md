@@ -118,7 +118,7 @@ Não validado: login manual completo com credenciais reais, MFA/CAPTCHA e detec�
 ## Modo de descoberta pós-login
 
 - Hipótese: a janela fechava antes que a navegação oficial de Fantasy gerasse chamadas de ligas.
-- Implementação: em desenvolvimento com `ESPN_DIAGNOSTICS=1`, a sessão real mantém a janela aberta, envia uma mensagem segura ao painel e navega uma única vez para `https://fantasy.espn.com/football/`. Produção continua fechando imediatamente.
+- Implementação: em desenvolvimento com `ESPN_DIAGNOSTICS=1`, a sessão real mantém a janela aberta, envia uma mensagem segura ao painel e navega uma única vez para `https://fantasy.espn.com/fantasy/`. Produção continua fechando imediatamente.
 - Navegação posterior é totalmente manual; não há reload, polling de página ou clique automático.
 - `webRequest` observa `onBeforeRequest`, `onBeforeSendHeaders`, `onHeadersReceived`, `onCompleted` e `onErrorOccurred` sem alterar requests e correlaciona por request id.
 - Headers e bodies nunca entram no modelo exportado. Query values são descartados e segmentos de pathname semelhantes a IDs são substituídos por `:id`.
@@ -147,3 +147,4 @@ Não validado: login manual completo com credenciais reais, MFA/CAPTCHA e detec�
 - Validação após a correção: typecheck e ESLint passaram; Vitest passou com 26 testes; Playwright/Electron passou com 11 testes; build NSIS x64 passou; `npm audit` encontrou 0 vulnerabilidades.
 - Segunda variação observada no site real: o redirecionamento chegou à área Fantasy sem emitir uma alteração de cookie posterior à verificação inicial. A detecção passou também a revalidar a sessão nos eventos reais `did-navigate` e `did-redirect-navigation`; não foi adicionado polling, reload ou navegação por intervalo.
 - Terceiro problema observado: o timeout destinado ao login continuava ativo durante a descoberta autenticada e fechava a janela ao expirar. O timer agora é cancelado assim que a sessão real é detectada; um E2E verifica que a janela continua aberta depois do limite original.
+- Destino real informado e observado pelo usuário: o hub atual é `https://fantasy.espn.com/fantasy/`. A rota anteriormente usada, `/football/`, retornou `404` em uma verificação sem sessão e foi substituída. Isso altera somente a navegação manual do diagnóstico, não confirma endpoint de ligas.
