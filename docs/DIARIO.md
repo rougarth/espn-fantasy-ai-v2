@@ -166,3 +166,12 @@ Não validado: login manual completo com credenciais reais, MFA/CAPTCHA e detec�
 - Padrões não observados em JSON: `leagues`, `memberships`, `teams`, `roster`, `standings` e `matchup`. O único candidato relacionado a fantasy/profile continua sendo `GET fan.api.espn.com/apis/v2/fans/:id`, mas apenas sua forma superficial foi observada.
 - Confirmação: zero endpoints. Não houve resposta contendo uma coleção demonstrável de ligas reais nem repetição controlada da mesma chamada.
 - Menor próximo teste: entrar no hub corrigido, abrir manualmente uma liga real, aguardar o carregamento completo por pelo menos 10 segundos e somente então exportar um novo diagnóstico sanitizado.
+
+### Terceira exportação real
+
+- 53 eventos, 10 respostas JSON, 43 eventos com sessão presente e 2 registros classificados como alta relevância.
+- Hosts com JSON: `site.api.espn.com` (2), `fan.api.espn.com` (2), `broadband.espn.com` (1), `dcf.espn.com` (1), `go.web.plus.espn.com` (1), `pinpoint.espn.com` (1), `registerdisney.go.com` (1) e `secure.espn.com` (1).
+- O hub observado foi `GET www.espn.com/fantasy/`, `200`, `text/html`. Não houve navegação registrada para uma página de liga, time, roster, standings ou matchup.
+- O candidato `GET fan.api.espn.com/apis/v2/fans/:id` apareceu 2 vezes com `200`, `application/json` e as mesmas chaves superficiais da primeira exportação. A consistência superficial foi repetida, mas o diagnóstico deliberadamente não contém a estrutura interna de `fantasyData`; não é possível demonstrar que ela representa ligas reais.
+- Nenhum endpoint foi confirmado. O terceiro arquivo não atende aos critérios de coleção real de ligas, repetição autenticada específica da chamada de ligas e validação manual dos nomes.
+- Menor teste restante: no hub genérico, abrir explicitamente `Fantasy Football`, selecionar uma liga real e visitar ao menos a página do time antes de exportar.
