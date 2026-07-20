@@ -1,9 +1,11 @@
 import { _electron as electron, expect, test, type ElectronApplication, type Page } from '@playwright/test';
 import path from 'node:path';
 
-let app: ElectronApplication; let page: Page;
-test.beforeEach(async () => {
-  app = await electron.launch({ args: [path.resolve('.')], env: { ...process.env, ESPN_LOGIN_TIMEOUT_MS: '800' } });
+let app: ElectronApplication; let page: Page; let userDataDir: string;
+test.beforeEach(async ({ browserName }, testInfo) => {
+  void browserName;
+  userDataDir = testInfo.outputPath('user-data');
+  app = await electron.launch({ args: [path.resolve('.'), `--user-data-dir=${userDataDir}`], env: { ...process.env, ESPN_LOGIN_TIMEOUT_MS: '800' } });
   page = await app.firstWindow(); await page.waitForLoadState('domcontentloaded');
 });
 test.afterEach(async () => { await app.close(); });
@@ -35,6 +37,49 @@ test('login times out without page reload', async () => {
 });
 test('renderer API exposes no cookie values or Node primitives', async () => {
   const exposed = await page.evaluate(() => { const target = window as unknown as { espnAuth: object; process?: unknown; require?: unknown }; return { keys: Object.keys(target.espnAuth), process: typeof target.process, require: typeof target.require }; });
-  expect(exposed.keys.sort()).toEqual(['cancel', 'clear', 'login', 'logout', 'status']);
+  expect(exposed.keys.sort()).toEqual(['cancel', 'clear', 'listLeagues', 'login', 'logout', 'status']);
   expect(exposed.process).toBe('undefined'); expect(exposed.require).toBe('undefined');
+});
+
+test('connected interface shows loading, empty results, and no raw JSON', async () => {
+  await app.evaluate(async ({ ipcMain, session }) => {
+    const target = session.fromPartition('persist:espn');
+    await target.cookies.set({ url: 'https://www.espn.com', name: 'espn_s2', value: 'e2e-test-only' });
+    await target.cookies.set({ url: 'https://www.espn.com', name: 'SWID', value: 'e2e-test-only' });
+    ipcMain.removeHandler('leagues:list');
+    ipcMain.handle('leagues:list', async () => { await new Promise((resolve) => setTimeout(resolve, 150)); return { ok: true, leagues: [] }; });
+  });
+  await page.reload();
+  await page.getByRole('button', { name: 'Carregar minhas ligas' }).click();
+  await expect(page.getByText('Carregando suas ligas…')).toBeVisible();
+  await expect(page.getByText('Nenhuma liga foi encontrada para esta conta.')).toBeVisible();
+  expect(await page.locator('body').innerText()).not.toContain('{"');
+});
+
+test('connected interface localizes friendly errors and logout disconnects', async () => {
+  await app.evaluate(async ({ ipcMain, session }) => {
+    const target = session.fromPartition('persist:espn');
+    await target.cookies.set({ url: 'https://www.espn.com', name: 'espn_s2', value: 'e2e-test-only' });
+    await target.cookies.set({ url: 'https://www.espn.com', name: 'SWID', value: 'e2e-test-only' });
+    ipcMain.removeHandler('leagues:list'); ipcMain.handle('leagues:list', () => ({ ok: false, error: 'no_internet' }));
+  });
+  await page.reload(); await page.getByRole('button', { name: 'Carregar minhas ligas' }).click();
+  await expect(page.getByText('Sem conexão com a internet. Verifique sua conexão e tente novamente.')).toBeVisible();
+  await page.getByLabel('Idioma').selectOption('en');
+  await expect(page.getByText('No internet connection. Check your connection and try again.')).toBeVisible();
+  await page.getByRole('button', { name: 'Sign out of ESPN' }).click();
+  await expect(page.getByRole('button', { name: 'Connect with ESPN' })).toBeVisible();
+});
+
+test('a valid persistent session is recognized after reopening', async () => {
+  await app.evaluate(async ({ session }) => {
+    const target = session.fromPartition('persist:espn');
+    await target.cookies.set({ url: 'https://www.espn.com', name: 'espn_s2', value: 'e2e-test-only', expirationDate: Date.now() / 1000 + 3600 });
+    await target.cookies.set({ url: 'https://www.espn.com', name: 'SWID', value: 'e2e-test-only', expirationDate: Date.now() / 1000 + 3600 });
+    await target.flushStorageData();
+  });
+  await app.close();
+  app = await electron.launch({ args: [path.resolve('.'), `--user-data-dir=${userDataDir}`], env: { ...process.env, ESPN_LOGIN_TIMEOUT_MS: '800' } });
+  page = await app.firstWindow();
+  await expect(page.getByText('Conectado com sucesso')).toBeVisible();
 });

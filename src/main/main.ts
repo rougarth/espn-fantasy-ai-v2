@@ -1,6 +1,7 @@
 import { app, BrowserWindow, shell } from 'electron';
 import path from 'node:path';
 import { registerAuthIpc, unregisterAuthIpc } from './ipc/auth-ipc';
+import { registerLeaguesIpc, unregisterLeaguesIpc } from './ipc/leagues-ipc';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -20,7 +21,8 @@ function createMainWindow(): BrowserWindow {
 app.whenReady().then(() => {
   mainWindow = createMainWindow();
   registerAuthIpc(mainWindow);
+  registerLeaguesIpc();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) { mainWindow = createMainWindow(); registerAuthIpc(mainWindow); } });
 });
-app.on('window-all-closed', () => { unregisterAuthIpc(); if (process.platform !== 'darwin') app.quit(); });
+app.on('window-all-closed', () => { unregisterAuthIpc(); unregisterLeaguesIpc(); if (process.platform !== 'darwin') app.quit(); });
 

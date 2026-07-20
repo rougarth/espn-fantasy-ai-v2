@@ -1,33 +1,34 @@
 import { BrowserWindow, session, shell, type Event } from 'electron';
 import { hasRealEspnSession } from './espn-session';
+import { attachEspnDiscovery } from '../espn/espn-discovery';
+import { isAllowedLoginUrl } from '../espn/login-domains';
 
 export const ESPN_PARTITION = 'persist:espn';
 export const LOGIN_TIMEOUT_MS = process.env.ESPN_LOGIN_TIMEOUT_MS ? Number(process.env.ESPN_LOGIN_TIMEOUT_MS) : 5 * 60_000;
 const LOGIN_URL = 'https://www.espn.com/login';
-const ESPN_HOST = /(^|\.)espn\.com$/i;
 let loginWindow: BrowserWindow | null = null;
+let pendingLogin: Promise<LoginResult> | null = null;
 
 export type LoginResult = 'authenticated' | 'cancelled' | 'timeout';
-
-function isAllowed(urlString: string): boolean {
-  try { const url = new URL(urlString); return url.protocol === 'https:' && ESPN_HOST.test(url.hostname); } catch { return false; }
-}
 
 export function getLoginWindow(): BrowserWindow | null { return loginWindow; }
 
 export async function openEspnLogin(parent: BrowserWindow): Promise<LoginResult> {
-  if (loginWindow && !loginWindow.isDestroyed()) { loginWindow.focus(); return 'cancelled'; }
+  if (loginWindow && !loginWindow.isDestroyed() && pendingLogin) { loginWindow.focus(); return pendingLogin; }
   const espnSession = session.fromPartition(ESPN_PARTITION);
-  return new Promise((resolve) => {
+  pendingLogin = new Promise((resolve) => {
     let settled = false;
     let authenticated = false;
+    let stopDiagnostics: () => void = () => undefined;
     const finish = (result: LoginResult) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
       espnSession.cookies.removeListener('changed', onCookieChanged);
+      stopDiagnostics();
       if (loginWindow && !loginWindow.isDestroyed()) loginWindow.close();
       loginWindow = null;
+      pendingLogin = null;
       resolve(result);
     };
     const onCookieChanged = async () => {
@@ -39,16 +40,18 @@ export async function openEspnLogin(parent: BrowserWindow): Promise<LoginResult>
       webPreferences: { partition: ESPN_PARTITION, contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true }
     });
     loginWindow.webContents.setWindowOpenHandler(({ url }) => {
-      if (isAllowed(url)) return { action: 'allow', overrideBrowserWindowOptions: { parent: loginWindow ?? undefined, webPreferences: { partition: ESPN_PARTITION, contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true } } };
-      void shell.openExternal(url); return { action: 'deny' };
+      if (isAllowedLoginUrl(url)) return { action: 'allow', overrideBrowserWindowOptions: { parent: loginWindow ?? undefined, webPreferences: { partition: ESPN_PARTITION, contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true } } };
+      if (url.startsWith('https://')) void shell.openExternal(url); return { action: 'deny' };
     });
-    loginWindow.webContents.on('will-navigate', (event: Event, url: string) => { if (!isAllowed(url)) event.preventDefault(); });
+    loginWindow.webContents.on('will-navigate', (event: Event, url: string) => { if (!isAllowedLoginUrl(url)) event.preventDefault(); });
     loginWindow.once('ready-to-show', () => loginWindow?.show());
     loginWindow.once('closed', () => { loginWindow = null; if (!authenticated) finish('cancelled'); });
     espnSession.cookies.on('changed', onCookieChanged);
+    stopDiagnostics = attachEspnDiscovery(loginWindow.webContents, () => hasRealEspnSession(espnSession));
     const timer = setTimeout(() => finish('timeout'), LOGIN_TIMEOUT_MS);
     void loginWindow.loadURL(LOGIN_URL).catch(() => finish('cancelled'));
   });
+  return pendingLogin;
 }
 
 export function cancelEspnLogin(): void {
