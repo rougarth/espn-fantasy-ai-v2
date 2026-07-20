@@ -175,3 +175,11 @@ Não validado: login manual completo com credenciais reais, MFA/CAPTCHA e detec�
 - O candidato `GET fan.api.espn.com/apis/v2/fans/:id` apareceu 2 vezes com `200`, `application/json` e as mesmas chaves superficiais da primeira exportação. A consistência superficial foi repetida, mas o diagnóstico deliberadamente não contém a estrutura interna de `fantasyData`; não é possível demonstrar que ela representa ligas reais.
 - Nenhum endpoint foi confirmado. O terceiro arquivo não atende aos critérios de coleção real de ligas, repetição autenticada específica da chamada de ligas e validação manual dos nomes.
 - Menor teste restante: no hub genérico, abrir explicitamente `Fantasy Football`, selecionar uma liga real e visitar ao menos a página do time antes de exportar.
+
+### Quarta exportação real
+
+- 14 eventos, 2 respostas JSON, 2 eventos com sessão presente e 1 registro de alta relevância.
+- As duas respostas JSON foram chamadas de autenticação em `registerdisney.go.com` (`POST`, `200`).
+- A única requisição de alta relevância foi `GET www.espn.com/fantasy/`, exportada antes de receber status ou content-type.
+- Nenhum request de liga, time ou página interna foi capturado. A evidência indica que a navegação ocorreu fora da `BrowserWindow` monitorada ou que o arquivo foi exportado antes da conclusão do carregamento.
+- Endpoint confirmado: nenhum. `listUserLeagues` continua desabilitado e sem fallback fictício.
