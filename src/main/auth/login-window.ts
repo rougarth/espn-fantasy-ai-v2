@@ -38,6 +38,7 @@ export async function openEspnLogin(parent: BrowserWindow): Promise<LoginResult>
     const onCookieChanged = async () => {
       if (!await hasRealEspnSession(espnSession)) return;
       authenticated = true;
+      clearTimeout(timer);
       if (diagnosticsEnabled()) {
         if (discoveryActive) return;
         discoveryActive = true; parent.webContents.send('discovery:started');

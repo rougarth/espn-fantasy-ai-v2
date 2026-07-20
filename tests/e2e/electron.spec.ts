@@ -86,6 +86,21 @@ test('development diagnostics recognizes a session that already exists when logi
   await page.getByRole('button', { name: 'Encerrar descoberta' }).click();
 });
 
+test('authenticated discovery remains open after the login timeout elapses', async () => {
+  await app.close();
+  app = await electron.launch({ args: [path.resolve('.'), `--user-data-dir=${userDataDir}`], env: { ...process.env, NODE_ENV: 'development', ESPN_DIAGNOSTICS: '1', ESPN_LOGIN_TIMEOUT_MS: '800' } });
+  page = await app.firstWindow(); await page.getByRole('button', { name: 'Conectar com ESPN' }).click();
+  await app.evaluate(async ({ session }) => {
+    const target = session.fromPartition('persist:espn');
+    await target.cookies.set({ url: 'https://www.espn.com', name: 'espn_s2', value: 'e2e-test-only' });
+    await target.cookies.set({ url: 'https://www.espn.com', name: 'SWID', value: 'e2e-test-only' });
+  });
+  await expect(page.getByText('Login confirmado. Agora abra sua liga da ESPN nesta janela.')).toBeVisible();
+  await page.waitForTimeout(1_200);
+  expect(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(2);
+  await page.getByRole('button', { name: 'Encerrar descoberta' }).click();
+});
+
 test('connected interface shows loading, empty results, and no raw JSON', async () => {
   await app.evaluate(async ({ ipcMain, session }) => {
     const target = session.fromPartition('persist:espn');

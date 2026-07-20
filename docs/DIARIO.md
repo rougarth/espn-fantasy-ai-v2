@@ -146,3 +146,4 @@ Não validado: login manual completo com credenciais reais, MFA/CAPTCHA e detec�
 - Endpoint de ligas: continua não confirmado; esta correção não adiciona nem presume endpoint.
 - Validação após a correção: typecheck e ESLint passaram; Vitest passou com 26 testes; Playwright/Electron passou com 11 testes; build NSIS x64 passou; `npm audit` encontrou 0 vulnerabilidades.
 - Segunda variação observada no site real: o redirecionamento chegou à área Fantasy sem emitir uma alteração de cookie posterior à verificação inicial. A detecção passou também a revalidar a sessão nos eventos reais `did-navigate` e `did-redirect-navigation`; não foi adicionado polling, reload ou navegação por intervalo.
+- Terceiro problema observado: o timeout destinado ao login continuava ativo durante a descoberta autenticada e fechava a janela ao expirar. O timer agora é cancelado assim que a sessão real é detectada; um E2E verifica que a janela continua aberta depois do limite original.
